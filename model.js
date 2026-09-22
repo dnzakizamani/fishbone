@@ -230,3 +230,181 @@ export const diagramThemes = {
     lineColor: '#0f172a'
   }
 };
+
+// Preset Template Populer Industri
+export const diagramPresets = {
+  sample: {
+    name: 'Sample Referensi (GoJS)',
+    data: sampleData
+  },
+  six_m: {
+    name: 'Manufaktur (6M Ishikawa)',
+    data: {
+      id: 'node-head-6m',
+      text: 'Produk Cacat Tinggi',
+      children: [
+        {
+          id: 'cat-man',
+          text: 'Manpower (Tenaga Kerja)',
+          children: [
+            {
+              id: 'sub-man-1',
+              text: 'Keterampilan Kurang',
+              children: [
+                { id: 'sub-man-11', text: 'Pelatihan Minim' }
+              ]
+            },
+          ]
+        },
+        {
+          id: 'cat-machine-6m',
+          text: 'Machine (Mesin)',
+          children: [
+            {
+              id: 'sub-mac-1',
+              text: 'Perawatan Terlambat',
+              children: [
+                { id: 'sub-mac-11', text: 'Sparepart Kosong' }
+              ]
+            },
+          ]
+        },
+        {
+          id: 'cat-method',
+          text: 'Method (Metode)',
+          children: [
+            {
+              id: 'sub-met-1',
+              text: 'SOP Tidak Standar',
+              children: [
+                { id: 'sub-met-11', text: 'Instruksi Ambigu' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'cat-material-6m',
+          text: 'Material (Bahan Baku)',
+          children: [
+            {
+              id: 'sub-mat-1',
+              text: 'Kualitas Tidak Stabil',
+              children: [
+                { id: 'sub-mat-11', text: 'Supplier Baru' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'cat-measurement-6m',
+          text: 'Measurement (Pengukuran)',
+          children: [
+            {
+              id: 'sub-mes-1',
+              text: 'Sensor Error',
+              children: [
+                { id: 'sub-mes-11', text: 'Suhu Melebihi Batas' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'cat-milieu',
+          text: 'Milieu (Lingkungan)',
+          children: [
+            { id: 'sub-env-2', text: 'Pencahayaan Redup' }
+          ]
+        }
+      ]
+    }
+  },
+  four_p: {
+    name: 'Software & Produk (4P)',
+    data: {
+      id: 'node-head-4p',
+      text: 'Deploy Sistem Gagal',
+      children: [
+        {
+          id: 'cat-people',
+          text: 'People (Tim)',
+          children: [
+            {
+              id: 'sub-peo-1',
+              text: 'Komunikasi Meleset',
+              children: [
+                { id: 'sub-peo-11', text: 'Serah Terima Tidak Jelas' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'cat-platform',
+          text: 'Platform (Infrastruktur)',
+          children: [
+            {
+              id: 'sub-pla-1',
+              text: 'Database Timeout',
+              children: [
+                { id: 'sub-pla-11', text: 'Koneksi Pool Penuh' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'cat-process-4p',
+          text: 'Process (Alur Kerja)',
+          children: [
+            {
+              id: 'sub-pro-1',
+              text: 'CI/CD Pipeline Error',
+              children: [
+                { id: 'sub-pro-11', text: 'Unit Test Terlewat' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'cat-product',
+          text: 'Product (Aplikasi)',
+          children: [
+            {
+              id: 'sub-prd-1',
+              text: 'Bug Regresi Fitur',
+              children: [
+                { id: 'sub-prd-11', text: 'Merge Conflict Tak Terlihat' }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+};
+
+/**
+ * Membuat Laporan Markdown Rantai Kausalitas
+ */
+export function generateMarkdownReport(path, forwardPairs, reverseQuestions) {
+  if (!path || path.length <= 1) return '';
+
+  const leafNode = path[path.length - 1];
+  const rootNode = path[0];
+
+  let md = `## 🐟 Laporan Analisis Kausalitas (Ishikawa & 5 Whys)\n\n`;
+  md += `- **Masalah / Akibat Utama**: \`${rootNode.text}\`\n`;
+  md += `- **Akar Penyebab Terpilih (Leaf)**: \`${leafNode.text}\`\n`;
+  md += `- **Kedalaman Level**: ${path.length - 1} tingkat\n\n`;
+
+  md += `### 🔄 Rantai Sebab-Akibat (Maju: Karena ➔ Maka)\n`;
+  forwardPairs.forEach((item, i) => {
+    md += `${i + 1}. ${item.cause} ➔ **${item.effect}**\n`;
+  });
+
+  md += `\n### ❓ Analisis Penelusuran Mundur (5 Whys)\n`;
+  reverseQuestions.forEach((item, i) => {
+    md += `${i + 1}. **${item.question}**\n   👉 ${item.answer}\n`;
+  });
+
+  md += `\n*Dibuat dengan Fishbone Causality Studio (${new Date().toLocaleDateString('id-ID')})*\n`;
+  return md;
+}
