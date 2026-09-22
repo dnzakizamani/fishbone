@@ -30,32 +30,55 @@ Website interaktif untuk membuat dan menganalisis **Nested Fishbone Diagram (Dia
 
 4. **Koleksi Tema Visual & Mode Gelap/Terang**:
    - **Mode Antarmuka**: Default Light Mode bersih dan kontras tinggi, dengan toggle instan ke Dark Mode.
-   - **6 Tema Warna Diagram**:
-     1. 🎨 **Modern Amber**: Oranye keemasan hangat & modern (default).
-     2. 🏛️ **Classic Ishikawa**: Biru klasik standar industri Ishikawa / QC 7 Tools.
-     3. 💼 **Corporate Blue**: Biru laut profesional & elegan.
-     4. 🌲 **Forest Emerald**: Hijau zamrud segar & ramah lingkungan.
-     5. ⚡ **Cyberpunk Neon**: Gradien ungu-magenta futuristik & berenergi.
-     6. 🖋️ **Minimalist Mono**: Monokrom hitam-putih publikasi ilmiah & laporan formal.
+   - **7 Tema Warna Diagram**:
+     1. 📰 **Klasik Asli (Garis Hitam)**: Hitam-putih orisinil standar buku teks / QC (default).
+     2. 🎨 **Modern Amber**: Oranye keemasan hangat & modern.
+     3. 🏛️ **Classic Ishikawa**: Biru klasik standar industri Ishikawa.
+     4. 💼 **Corporate Blue**: Biru laut profesional & elegan.
+     5. 🌲 **Forest Emerald**: Hijau zamrud segar & ramah lingkungan.
+     6. ⚡ **Cyberpunk Neon**: Gradien ungu-magenta futuristik & berenergi.
+     7. 🖋️ **Minimalist Mono**: Monokrom hitam-putih publikasi ilmiah.
 
-5. **Navigasi & Ekspor**:
-   - Pan (geser kanvas dengan drag mouse) & Zoom (scroll wheel atau tombol +/-).
-   - Simpan & Buka file format JSON.
-   - Export ke file vektor SVG tajam dan gambar PNG resolusi tinggi sesuai tema aktif.
+5. **Template Cepat Industri (1-Click Presets)**:
+   - **Sample Referensi (GoJS)**: Diagram hierarki bersarang sesuai contoh awal.
+   - **6M Manufaktur**: Standar Lean & Six Sigma (*Manpower, Machine, Method, Material, Measurement, Milieu*).
+   - **4P Software & Produk**: Standar evaluasi insiden teknologi (*People, Platform, Process, Product*).
+
+6. **Panel Kausalitas Interaktif & Salin Laporan (5 Whys Inspector)**:
+   - Breadcrumb visual berurutan dari akar penyebab hingga akibat utama.
+   - Tombol **📋 Salin** untuk mengekspor rantai analisis langsung ke Clipboard dalam format Markdown rapi untuk laporan meeting atau post-mortem insiden.
+
+7. **Responsif Mobile & Touch Gestures**:
+   - Touch pan 1 jari dan pinch-to-zoom 2 jari pada layar sentuh.
+   - Drawer slide-out sidebar dengan backdrop tap-to-close di layar HP.
+   - Header dan panel kausalitas yang adaptif pada layar kecil.
+
+8. **Shortcut Keyboard**:
+   - `Space + Drag`: Geser kanvas
+   - `Ctrl + Scroll`: Zoom kanvas
+   - `Escape`: Batal pilih node / tutup modal
+   - `Enter`: Edit teks node terpilih
+   - `Tab` / `Insert`: Tambah sub-cabang baru
+   - `Delete` / `Backspace`: Hapus cabang terpilih
+
+9. **Navigasi & Ekspor Terpadu**:
+   - Menu dropdown terpadu untuk export gambar PNG resolusi tinggi, vektor SVG tajam, dan file JSON.
+   - Background meja kerja grid titik-titik presisi (*engineering dot matrix*).
+   - Siluet sirip ekor ikan (*tail fin*) di pangkal kiri spine.
 
 ## Cara Menjalankan
 
-Karena proyek ini menggunakan **Web Native murni (Zero-dependency)**, Anda dapat menjalankannya dengan:
-
-### Opsi 1: Menggunakan Web Server Lokal (Direkomendasikan untuk ES Modules)
-Jalankan salah satu perintah berikut di terminal pada folder `fishhh`:
+### Opsi 1: Menjalankan dengan Docker (Port 8034)
 ```bash
 cd /home/zaki/dev/fishhh
-python3 -m http.server 8000
+docker compose up -d --build
 ```
-atau jika memiliki Node.js / npx:
+Akses di browser: `http://localhost:8034`
+
+### Opsi 2: Menggunakan Python Server
 ```bash
-npx serve .
+cd /home/zaki/dev/fishhh
+python3 -m http.server 8034
 ```
 Lalu buka browser di `http://localhost:8000`.
 
