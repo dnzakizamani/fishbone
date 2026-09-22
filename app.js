@@ -4,7 +4,7 @@
 
 import { layoutFishbone } from './fishbone-layout.js';
 import { findPathToRoot, generateCausalityText } from './causality.js';
-import { sampleData, treeToOutline, outlineToTree, diagramThemes } from './model.js';
+import { sampleData, treeToOutline, outlineToTree, diagramThemes, diagramPresets, generateMarkdownReport } from './model.js';
 
 // Application State
 let currentTree = JSON.parse(JSON.stringify(sampleData));
@@ -49,7 +49,7 @@ export function renderDiagram() {
     updateTransform();
   }
 
-  // 1. Defs (filter glow & fish head gradient sesuai tema diagram)
+  // 1. Defs (filter glow, fish head gradient, & dot matrix pattern)
   const currentDiagKey = document.documentElement.getAttribute('data-diagram-theme') || 'pure_classic';
   const themeColors = diagramThemes[currentDiagKey] || diagramThemes.pure_classic;
 
@@ -66,12 +66,39 @@ export function renderDiagram() {
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
+    <pattern id="dotGrid" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.1" fill="${themeColors.lineColor}" opacity="0.14" />
+    </pattern>
   `;
   viewportEl.appendChild(defs);
 
-  // 2. Render Links (Spine, Ribs, Stems)
+  // Background Engineering Grid
+  const gridRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  gridRect.setAttribute('x', '-6000');
+  gridRect.setAttribute('y', '-6000');
+  gridRect.setAttribute('width', '12000');
+  gridRect.setAttribute('height', '12000');
+  gridRect.setAttribute('fill', 'url(#dotGrid)');
+  gridRect.setAttribute('pointer-events', 'none');
+  viewportEl.appendChild(gridRect);
+
+  // 2. Render Links & Fish Tail Fin
   const linksGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   linksGroup.setAttribute('class', 'links-group');
+
+  // Gambar sirip ekor ikan (Fish Tail Fin) di pangkal kiri spine
+  if (layout.tail) {
+    const { x, y, depth, spread } = layout.tail;
+    const tailPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    tailPath.setAttribute('class', 'fishbone-tail-path');
+    tailPath.setAttribute('d', `
+      M ${x} ${y}
+      L ${x - depth} ${y - spread}
+      Q ${x - depth * 0.4} ${y} ${x - depth} ${y + spread}
+      Z
+    `);
+    linksGroup.appendChild(tailPath);
+  }
 
   layout.links.forEach(link => {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -84,14 +111,24 @@ export function renderDiagram() {
     if (link.isSpine) cls += ' spine';
 
     // Highlight jika link ini menghubungkan node di dalam activePath
-    if (activeNodeIds.has(link.fromId) && (link.toId === 'root' || activeNodeIds.has(link.toId))) {
-      cls += ' highlighted';
-    } else if (link.isSpine && activePath.length > 0) {
+    const isPathLink = (activeNodeIds.has(link.fromId) && (link.toId === 'root' || activeNodeIds.has(link.toId))) ||
+                       (link.isSpine && activePath.length > 0);
+    if (isPathLink) {
       cls += ' highlighted';
     }
 
     line.setAttribute('class', cls);
     linksGroup.appendChild(line);
+
+    // Titik persimpangan (Junction Dot)
+    if (link.isDiagonal || link.isHorizontal) {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', link.x1);
+      dot.setAttribute('cy', link.y1);
+      dot.setAttribute('r', '3.5');
+      dot.setAttribute('class', `fishbone-junction-dot ${isPathLink ? 'highlighted' : ''}`);
+      linksGroup.appendChild(dot);
+    }
   });
   viewportEl.appendChild(linksGroup);
 
@@ -199,13 +236,32 @@ function clearSelection() {
 }
 
 function updateCausalityUI(path) {
+  const breadcrumbsEl = document.getElementById('causal-breadcrumbs');
+
   if (!path || path.length === 0) {
+    if (breadcrumbsEl) breadcrumbsEl.innerHTML = '';
     causalityBody.innerHTML = `
       <div class="empty-state">
         👈 Klik salah satu node/penyebab di diagram untuk melihat rantai kausalitas ("Karena... maka..." & "Kenapa... karena...").
       </div>
     `;
     return;
+  }
+
+  // Update Breadcrumbs di Header Panel
+  if (breadcrumbsEl) {
+    breadcrumbsEl.innerHTML = path.map((node, i) => `
+      <span class="breadcrumb-pill ${node.id === selectedNodeId ? 'active' : ''}" data-id="${node.id}">${node.text}</span>
+      ${i < path.length - 1 ? '<span class="breadcrumb-sep">➔</span>' : ''}
+    `).join('');
+
+    breadcrumbsEl.querySelectorAll('.breadcrumb-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const id = pill.getAttribute('data-id');
+        const found = findNodeById(currentTree, id);
+        if (found) selectNode(id, found.text);
+      });
+    });
   }
 
   const { forward, reverse } = generateCausalityText(path);
@@ -505,12 +561,18 @@ function setupExport() {
     cloneSvg.setAttribute('height', bounds.height);
 
     // Style inline
+    const isClassic = currentDiagKey === 'pure_classic';
+    const tailFill = isClassic ? '#ffffff' : 'url(#fishHeadGrad)';
+    const headFill = isClassic ? '#ffffff' : 'url(#fishHeadGrad)';
+
     const styleEl = document.createElement('style');
     styleEl.textContent = `
       .fishbone-link { stroke: ${themeColors.lineColor}; stroke-width: 2.5; stroke-linecap: round; }
       .fishbone-link.spine { stroke-width: 4; }
       .fishbone-node rect { fill: ${themeColors.badgeBg}; stroke: ${themeColors.badgeBorder}; stroke-width: 1.5; rx: 6px; ry: 6px; }
-      .fishbone-head-path { fill: url(#fishHeadGrad); stroke: ${themeColors.headStroke}; stroke-width: 2.5; }
+      .fishbone-head-path { fill: ${headFill}; stroke: ${themeColors.headStroke}; stroke-width: 2.5; }
+      .fishbone-tail-path { fill: ${tailFill}; stroke: ${themeColors.headStroke}; stroke-width: 2.5; stroke-linejoin: round; }
+      .fishbone-junction-dot { fill: ${themeColors.lineColor}; }
       .fishbone-node text { fill: ${themeColors.badgeText}; font-size: 11.5px; font-weight: 600; font-family: sans-serif; text-anchor: middle; dominant-baseline: central; }
       .head-text { fill: ${themeColors.badgeText}; font-size: 16px; font-weight: 700; font-family: sans-serif; text-anchor: middle; dominant-baseline: central; }
       .fishbone-node tspan { text-anchor: middle; }
@@ -524,6 +586,7 @@ function setupExport() {
     const svgData = new XMLSerializer().serializeToString(cloneSvg);
     const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     downloadBlob(blob, 'fishbone-diagram.svg');
+    showToast('📐 Vektor SVG berhasil diunduh!');
   });
 
   document.getElementById('export-png').addEventListener('click', () => {
@@ -531,6 +594,9 @@ function setupExport() {
     const bounds = layout.bounds;
     const currentDiagKey = document.documentElement.getAttribute('data-diagram-theme') || 'pure_classic';
     const themeColors = diagramThemes[currentDiagKey] || diagramThemes.pure_classic;
+    const isClassic = currentDiagKey === 'pure_classic';
+    const tailFill = isClassic ? '#ffffff' : 'url(#fishHeadGrad)';
+    const headFill = isClassic ? '#ffffff' : 'url(#fishHeadGrad)';
 
     const cloneSvg = svgEl.cloneNode(true);
     cloneSvg.setAttribute('viewBox', `${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`);
@@ -542,7 +608,9 @@ function setupExport() {
       .fishbone-link { stroke: ${themeColors.lineColor}; stroke-width: 2.5; stroke-linecap: round; }
       .fishbone-link.spine { stroke-width: 4; }
       .fishbone-node rect { fill: ${themeColors.badgeBg}; stroke: ${themeColors.badgeBorder}; stroke-width: 1.5; rx: 6px; ry: 6px; }
-      .fishbone-head-path { fill: url(#fishHeadGrad); stroke: ${themeColors.headStroke}; stroke-width: 2.5; }
+      .fishbone-head-path { fill: ${headFill}; stroke: ${themeColors.headStroke}; stroke-width: 2.5; }
+      .fishbone-tail-path { fill: ${tailFill}; stroke: ${themeColors.headStroke}; stroke-width: 2.5; stroke-linejoin: round; }
+      .fishbone-junction-dot { fill: ${themeColors.lineColor}; }
       .fishbone-node text { fill: ${themeColors.badgeText}; font-size: 11.5px; font-weight: 600; font-family: sans-serif; text-anchor: middle; dominant-baseline: central; }
       .head-text { fill: ${themeColors.badgeText}; font-size: 16px; font-weight: 700; font-family: sans-serif; text-anchor: middle; dominant-baseline: central; }
       .fishbone-node tspan { text-anchor: middle; }
@@ -572,6 +640,7 @@ function setupExport() {
       canvas.toBlob((pngBlob) => {
         downloadBlob(pngBlob, 'fishbone-diagram.png');
         URL.revokeObjectURL(blobURL);
+        showToast('📷 Gambar PNG berhasil diunduh!');
       });
     };
     img.src = blobURL;
@@ -581,6 +650,7 @@ function setupExport() {
     const jsonStr = JSON.stringify(currentTree, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
     downloadBlob(blob, 'fishbone-data.json');
+    showToast('💾 File JSON berhasil diunduh!');
   });
 
   document.getElementById('import-json-btn').addEventListener('click', () => {
@@ -598,6 +668,7 @@ function setupExport() {
           currentTree = data;
           syncFromTreeToOutline();
           renderDiagram();
+          showToast('📂 File JSON berhasil dimuat!');
         } else {
           alert('Format JSON tidak valid.');
         }
@@ -606,6 +677,110 @@ function setupExport() {
       }
     };
     reader.readAsText(file);
+  });
+
+  // Dropdown Menu Ekspor & File
+  const exportBtn = document.getElementById('btn-export-dropdown');
+  const exportMenu = document.getElementById('export-menu');
+  if (exportBtn && exportMenu) {
+    exportBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportMenu.classList.toggle('show');
+    });
+
+    window.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown-container')) {
+        exportMenu.classList.remove('show');
+      }
+    });
+
+    exportMenu.querySelectorAll('.dropdown-item').forEach(item => {
+      item.addEventListener('click', () => {
+        exportMenu.classList.remove('show');
+      });
+    });
+  }
+
+  // Tombol Salin Laporan Kausalitas (Markdown)
+  const copyReportBtn = document.getElementById('btn-copy-report');
+  if (copyReportBtn) {
+    copyReportBtn.addEventListener('click', () => {
+      const activePath = selectedNodeId ? findPathToRoot(selectedNodeId, currentTree) : [];
+      if (!activePath || activePath.length <= 1) {
+        showToast('👉 Klik salah satu cabang penyebab untuk menyalin laporan!');
+        return;
+      }
+      const { forward, reverse } = generateCausalityText(activePath);
+      const reportMd = generateMarkdownReport(activePath, forward, reverse);
+
+      navigator.clipboard.writeText(reportMd).then(() => {
+        showToast('📋 Laporan kausalitas disalin ke clipboard!');
+      }).catch(() => {
+        showToast('Gagal menyalin ke clipboard.');
+      });
+    });
+  }
+}
+
+// ─── Toast Notification Helper ─────────────────────────────────
+let toastTimer = null;
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2600);
+}
+
+// ─── Template Presets Management ───────────────────────────────
+function setupPresets() {
+  const presetSelect = document.getElementById('diagram-preset-select');
+  if (!presetSelect) return;
+
+  presetSelect.addEventListener('change', (e) => {
+    const key = e.target.value;
+    const preset = diagramPresets[key];
+    if (preset && preset.data) {
+      currentTree = JSON.parse(JSON.stringify(preset.data));
+      selectedNodeId = null;
+      selectedToolbar.classList.remove('show');
+      syncFromTreeToOutline();
+      renderDiagram();
+      showToast(`📋 Template "${preset.name}" dimuat!`);
+    }
+  });
+}
+
+// ─── Keyboard Shortcuts ────────────────────────────────────────
+function setupKeyboardShortcuts() {
+  window.addEventListener('keydown', (e) => {
+    const activeEl = document.activeElement;
+    const isInputActive = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+    if (e.key === 'Escape') {
+      if (modalOverlay.classList.contains('show')) {
+        modalOverlay.classList.remove('show');
+      } else if (selectedNodeId) {
+        clearSelection();
+      }
+      return;
+    }
+
+    if (!isInputActive && selectedNodeId) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('btn-edit-node').click();
+      } else if (e.key === 'Tab' || e.key === 'Insert') {
+        e.preventDefault();
+        document.getElementById('btn-add-child').click();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        document.getElementById('btn-delete-node').click();
+      }
+    }
   });
 }
 
@@ -640,28 +815,51 @@ function setupTabs() {
 
   const sidebarEl = document.getElementById('sidebar');
   const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+  const mobileFab = document.getElementById('mobile-outline-fab');
 
-  // Di mobile (layar <= 768px), sidebar awal dalam keadaan tertutup
+  function openSidebar() {
+    sidebarEl.classList.remove('collapsed');
+    if (window.innerWidth <= 768 && sidebarBackdrop) {
+      sidebarBackdrop.classList.add('show');
+    }
+    if (mobileFab) mobileFab.style.display = 'none';
+  }
+
+  function closeSidebar() {
+    sidebarEl.classList.add('collapsed');
+    if (sidebarBackdrop) sidebarBackdrop.classList.remove('show');
+    // Tampilkan FAB lagi hanya di mobile jika sidebar tertutup
+    if (mobileFab && window.innerWidth <= 768) {
+      mobileFab.style.display = '';
+    }
+  }
+
+  // Di mobile, sidebar awal tertutup
   if (window.innerWidth <= 768) {
     sidebarEl.classList.add('collapsed');
   }
 
   document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
-    const isCollapsed = sidebarEl.classList.toggle('collapsed');
-    if (sidebarBackdrop) {
-      if (!isCollapsed && window.innerWidth <= 768) {
-        sidebarBackdrop.classList.add('show');
-      } else {
-        sidebarBackdrop.classList.remove('show');
-      }
+    if (sidebarEl.classList.contains('collapsed')) {
+      openSidebar();
+    } else {
+      closeSidebar();
     }
   });
 
+  // Tombol ✕ di dalam sidebar
+  const closeSidebarBtn = document.getElementById('btn-close-sidebar');
+  if (closeSidebarBtn) {
+    closeSidebarBtn.addEventListener('click', closeSidebar);
+  }
+
+  // Mobile FAB untuk buka sidebar
+  if (mobileFab) {
+    mobileFab.addEventListener('click', openSidebar);
+  }
+
   if (sidebarBackdrop) {
-    sidebarBackdrop.addEventListener('click', () => {
-      sidebarEl.classList.add('collapsed');
-      sidebarBackdrop.classList.remove('show');
-    });
+    sidebarBackdrop.addEventListener('click', closeSidebar);
   }
 
   document.getElementById('btn-toggle-causality').addEventListener('click', () => {
@@ -718,11 +916,13 @@ function setupTheme() {
 // ─── Init ──────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   setupTheme();
+  setupPresets();
   setupZoomPan();
   setupOutlineSync();
   setupNodeActions();
   setupExport();
   setupTabs();
+  setupKeyboardShortcuts();
 
   renderDiagram();
 });
