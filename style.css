@@ -84,6 +84,10 @@
   fill: #ffffff !important;
   stroke: #000000 !important;
 }
+[data-diagram-theme="pure_classic"] .fishbone-tail-path {
+  fill: #ffffff !important;
+  stroke: #000000 !important;
+}
 [data-diagram-theme="pure_classic"] .fishbone-node.selected rect,
 [data-diagram-theme="pure_classic"] .fishbone-node.selected .fishbone-head-path {
   stroke: #2563eb !important;
@@ -248,7 +252,7 @@ button {
   transition: all 0.15s ease;
 }
 
-.theme-select-wrapper {
+.header-select-group {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -277,6 +281,60 @@ button {
   border-color: var(--primary);
 }
 
+/* Dropdown Container for Unified Export */
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px var(--card-shadow);
+  padding: 6px;
+  min-width: 175px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 60;
+}
+.dropdown-menu.show {
+  display: flex;
+}
+
+.dropdown-item {
+  width: 100%;
+  justify-content: flex-start;
+  background: transparent;
+  color: var(--text-main);
+  border: none;
+  border-radius: 5px;
+  padding: 7px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  text-align: left;
+}
+.dropdown-item:hover {
+  background: var(--bg-surface-hover);
+  color: var(--primary);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
+.btn-xs {
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 4px;
+}
+
 .btn-default {
   background: var(--bg-surface-hover);
   color: var(--text-main);
@@ -292,6 +350,18 @@ button {
 }
 .btn-primary:hover {
   background: var(--primary-hover);
+}
+
+.btn-prominent {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  font-weight: 700;
+  border: 1px solid #b45309;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+}
+.btn-prominent:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.55);
 }
 
 .btn-danger {
@@ -512,6 +582,15 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  flex: 1;
 }
 
 .panel-title {
@@ -521,6 +600,46 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
+}
+
+.causal-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.causal-breadcrumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.breadcrumb-pill {
+  padding: 2px 7px;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.breadcrumb-pill:hover,
+.breadcrumb-pill.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+[data-theme="dark"] .breadcrumb-pill {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.breadcrumb-sep {
+  color: var(--text-muted);
+  font-size: 9px;
+  opacity: 0.6;
 }
 
 .causality-tabs {
@@ -693,6 +812,53 @@ button {
   text-anchor: middle;
 }
 
+/* Fish Tail Fin */
+.fishbone-tail-path {
+  fill: url(#fishHeadGrad);
+  stroke: var(--badge-border);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25));
+}
+
+.fishbone-junction-dot {
+  fill: var(--line-color);
+  transition: fill 0.2s, r 0.2s;
+}
+
+.fishbone-junction-dot.highlighted {
+  fill: var(--line-active);
+  filter: drop-shadow(0 0 4px var(--line-active));
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px var(--card-shadow);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 200;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Modal Dialog */
 .modal-overlay {
   position: fixed;
@@ -717,25 +883,28 @@ button {
   border-radius: 10px;
   width: 380px;
   padding: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 40px var(--card-shadow);
 }
 
 .modal-title {
   font-size: 14px;
   font-weight: 700;
+  color: var(--text-main);
   margin-bottom: 12px;
 }
 
 .modal-input {
   width: 100%;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  background: var(--bg-surface-hover);
+  border: 1.5px solid var(--border-color);
   border-radius: 6px;
-  color: #fff;
+  color: var(--text-main);
   padding: 10px 12px;
   font-size: 13px;
+  font-weight: 500;
   margin-bottom: 16px;
   outline: none;
+  transition: border-color 0.15s ease;
 }
 .modal-input:focus {
   border-color: var(--primary);
@@ -745,6 +914,28 @@ button {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* Sidebar Close Button */
+.sidebar-close-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  font-weight: 700;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.sidebar-close-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-main);
+}
+
+/* Mobile Outline Floating Action Button (Hidden on Desktop) */
+.mobile-outline-fab {
+  display: none;
 }
 
 /* ─── Mobile Responsive Styles ────────────────────────────── */
@@ -816,8 +1007,42 @@ button {
     border-right: 1px solid var(--border-color);
   }
 
+  .sidebar-close-btn {
+    display: inline-block;
+  }
+
   .sidebar-backdrop.show {
     display: block;
+  }
+
+  /* Floating Outline FAB on mobile (Mencolok dan mudah diakses) */
+  .mobile-outline-fab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    border: 1px solid #b45309;
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 11.5px;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+    z-index: 35;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    animation: pulseFab 2.5s infinite ease-in-out;
+  }
+  .mobile-outline-fab:hover {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.65);
+  }
+  @keyframes pulseFab {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4); }
+    50% { transform: scale(1.04); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.7); }
   }
 
   /* Floating toolbar on mobile */
