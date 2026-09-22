@@ -6,7 +6,7 @@
 import assert from 'node:assert';
 import { findPathToRoot, generateCausalityText } from './causality.js';
 import { layoutFishbone, checkCollisions } from './fishbone-layout.js';
-import { sampleData, treeToOutline, outlineToTree, diagramThemes } from './model.js';
+import { sampleData, treeToOutline, outlineToTree, diagramThemes, diagramPresets, generateMarkdownReport } from './model.js';
 
 console.log('--- RUNNING FISHHH TESTS ---');
 
@@ -101,5 +101,31 @@ expectedThemes.forEach(themeKey => {
   assert.ok(diagramThemes[themeKey].badgeBg, `Theme ${themeKey} must define badgeBg`);
 });
 console.log('✔ All 7 diagram themes validated (including pure_classic with black lines & white badges)');
+
+// 8. Test Tail Fin Geometri
+assert.ok(layout.tail, 'Layout must calculate tail fin coordinates');
+assert.ok(layout.tail.x > 0 && layout.tail.y > 0, 'Tail coordinate must be positive numbers');
+assert.strictEqual(layout.tail.depth, 55, 'Tail depth should be 55');
+assert.strictEqual(layout.tail.spread, 45, 'Tail spread should be 45');
+console.log('✔ Tail fin geometry validated at spine start');
+
+// 9. Test Diagram Presets (6M & 4P)
+assert.ok(diagramPresets.sample, 'Sample preset must exist');
+assert.ok(diagramPresets.six_m, '6M Manufacturing preset must exist');
+assert.ok(diagramPresets.four_p, '4P Software preset must exist');
+assert.strictEqual(diagramPresets.six_m.data.children.length, 6, '6M preset must have 6 categories');
+assert.strictEqual(diagramPresets.four_p.data.children.length, 4, '4P preset must have 4 categories');
+
+const layout6M = layoutFishbone(diagramPresets.six_m.data);
+const collisions6M = checkCollisions(layout6M.nodes);
+assert.strictEqual(collisions6M.length, 0, '6M preset must be collision-free');
+console.log('✔ 6M & 4P presets validated with zero collisions');
+
+// 10. Test Markdown Report Generator
+const reportMd = generateMarkdownReport(path, causality.forward, causality.reverse);
+assert.ok(reportMd.includes('Laporan Analisis Kausalitas'), 'Report must have header');
+assert.ok(reportMd.includes('Parameter - 4'), 'Report must mention leaf node');
+assert.ok(reportMd.includes('Head Parameter'), 'Report must mention root problem');
+console.log('✔ Markdown report generator validated');
 
 console.log('ALL FISHHH TESTS PASSED! 🎉');
