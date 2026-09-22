@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id" data-diagram-theme="pure_classic">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nested Fishbone Diagram — Analisis Kausalitas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🐟</div>
+      <h1>Fishbone <span>Causality</span> Studio</h1>
+    </div>
+    <div class="header-actions">
+      <div class="theme-select-wrapper">
+        <label for="diagram-theme-select" class="theme-select-label">🎨 Tema:</label>
+        <select id="diagram-theme-select" class="theme-dropdown">
+          <option value="pure_classic" selected>📰 Klasik Asli (Garis Hitam)</option>
+          <option value="amber">Modern Amber</option>
+          <option value="classic">Classic Ishikawa</option>
+          <option value="corporate">Corporate Blue</option>
+          <option value="emerald">Forest Emerald</option>
+          <option value="cyberpunk">Cyberpunk Neon</option>
+          <option value="minimalist">Minimalist Mono</option>
+        </select>
+      </div>
+      <button id="btn-toggle-theme" class="btn-default" title="Ganti Tema Terang/Gelap">
+        <span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span>
+      </button>
+      <button id="btn-toggle-sidebar" class="btn-default" title="Sembunyikan/Tampilkan Panel Outline">
+        📑 Toggle Outline
+      </button>
+      <input type="file" id="import-json-input" accept=".json" style="display: none;">
+      <button id="import-json-btn" class="btn-default">📂 Import JSON</button>
+      <button id="export-json" class="btn-default">💾 Simpan JSON</button>
+      <button id="export-svg" class="btn-default">📐 Export SVG</button>
+      <button id="export-png" class="btn-primary">📷 Export PNG</button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Sidebar: Outline Editor -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <span>📝</span> Text Outline Editor
+        </div>
+      </div>
+      <div class="sidebar-help">
+        Gunakan <strong>indentasi 2 spasi</strong> untuk membuat cabang bersarang.<br>
+        Baris pertama adalah <em>Head Parameter</em> (Akibat/Masalah).
+      </div>
+      <div class="editor-content">
+        <textarea id="outline-editor" class="outline-textarea" spellcheck="false"></textarea>
+      </div>
+    </aside>
+
+    <!-- Workspace: Canvas & Diagram -->
+    <main class="workspace">
+      <!-- Toolbar Zoom & Fit -->
+      <div class="floating-toolbar">
+        <button id="zoom-in" class="tool-btn" title="Perbesar (+)">➕</button>
+        <button id="zoom-out" class="tool-btn" title="Perkecil (-)">➖</button>
+        <button id="zoom-reset" class="tool-btn" title="Reset Tampilan (Fit)">🎯 Fit</button>
+      </div>
+
+      <!-- Action Toolbar Saat Node Dipilih -->
+      <div class="selected-node-toolbar" id="selected-node-toolbar">
+        <span style="font-size: 11px; color: var(--text-muted);">Terpilih:</span>
+        <span class="selected-node-label" id="selected-node-label">-</span>
+        <button id="btn-add-child" class="btn-primary" style="padding: 4px 8px; font-size: 11px;">
+          ➕ Tambah Sub
+        </button>
+        <button id="btn-edit-node" class="btn-default" style="padding: 4px 8px; font-size: 11px;">
+          ✏️ Edit Teks
+        </button>
+        <button id="btn-delete-node" class="btn-danger" style="padding: 4px 8px; font-size: 11px;">
+          🗑️ Hapus
+        </button>
+      </div>
+
+      <!-- Canvas SVG Interaktif -->
+      <div class="canvas-container" id="canvas-container">
+        <svg id="fishbone-svg">
+          <g id="svg-viewport"></g>
+        </svg>
+      </div>
+
+      <!-- Panel Narasi Kausalitas -->
+      <section class="causality-panel" id="causality-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🔗</span> Analisis Hubungan Kausalitas
+          </div>
+          <div class="causality-tabs">
+            <button id="tab-forward" class="causality-tab active">
+              ➡️ Karena ... , maka ...
+            </button>
+            <button id="tab-reverse" class="causality-tab">
+              🔄 Kenapa ... ? , karena ... (5 Whys)
+            </button>
+            <button id="btn-toggle-causality" class="tool-btn" style="padding: 2px 6px; margin-left: 8px;" title="Minimize/Maximize">
+              ↕️
+            </button>
+          </div>
+        </div>
+        <div class="panel-body" id="causality-body">
+          <div class="empty-state">
+            👈 Klik salah satu node/penyebab di diagram untuk melihat rantai kausalitas ("Karena... maka..." & "Kenapa... karena...").
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Dialog Input / Edit -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-title" id="modal-title">Edit Node</div>
+      <input type="text" id="modal-input" class="modal-input" autocomplete="off" />
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn-default">Batal</button>
+        <button id="modal-ok" class="btn-primary">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

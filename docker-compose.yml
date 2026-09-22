@@ -1,0 +1,7 @@
+services:
+  fishhh:
+    build: .
+    container_name: fishhh-app
+    ports:
+      - "8034:80"
+    restart: unless-stopped
