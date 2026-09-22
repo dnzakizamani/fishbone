@@ -242,6 +242,8 @@ export function layoutFishbone(rootData) {
   }
 
   const spineStartX = currentSpineX - 70;
+  const tailDepth = 55;
+  const tailSpread = 45;
 
   // Garis spine horizontal utama
   links.push({
@@ -258,11 +260,11 @@ export function layoutFishbone(rootData) {
   // Safety pass
   resolveCollisions(nodes);
 
-  // Bounding box
-  let minX = spineStartX - 30;
+  // Bounding box (memperhitungkan sirip ekor di kiri)
+  let minX = spineStartX - tailDepth - 30;
   let maxX = headX + root._w + 50;
-  let minY = spineY - 30;
-  let maxY = spineY + 30;
+  let minY = spineY - tailSpread - 20;
+  let maxY = spineY + tailSpread + 20;
 
   nodes.forEach(n => {
     minX = Math.min(minX, n.x - 25);
@@ -275,7 +277,8 @@ export function layoutFishbone(rootData) {
     nodes,
     links,
     bounds: { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY },
-    spine: { x1: spineStartX, y1: spineY, x2: headX, y2: spineY }
+    spine: { x1: spineStartX, y1: spineY, x2: headX, y2: spineY },
+    tail: { x: spineStartX, y: spineY, depth: tailDepth, spread: tailSpread }
   };
 }
 
