@@ -16,10 +16,21 @@
       <h1>Fishbone <span>Causality</span> Studio</h1>
     </div>
     <div class="header-actions">
-      <div class="theme-select-wrapper">
+      <!-- Preset Template Selector -->
+      <div class="header-select-group">
+        <label for="diagram-preset-select" class="theme-select-label">📋 Template:</label>
+        <select id="diagram-preset-select" class="theme-dropdown">
+          <option value="six_m" selected>6M Manufaktur</option>
+          <option value="sample">Sample (GoJS)</option>
+          <option value="four_p">4P Software</option>
+        </select>
+      </div>
+
+      <!-- Theme Selector -->
+      <div class="header-select-group">
         <label for="diagram-theme-select" class="theme-select-label">🎨 Tema:</label>
         <select id="diagram-theme-select" class="theme-dropdown">
-          <option value="pure_classic" selected>📰 Klasik Asli (Garis Hitam)</option>
+          <option value="pure_classic" selected>📰 Klasik Asli</option>
           <option value="amber">Modern Amber</option>
           <option value="classic">Classic Ishikawa</option>
           <option value="corporate">Corporate Blue</option>
@@ -28,17 +39,31 @@
           <option value="minimalist">Minimalist Mono</option>
         </select>
       </div>
+
+      <!-- Theme Mode Toggle -->
       <button id="btn-toggle-theme" class="btn-default" title="Ganti Tema Terang/Gelap">
         <span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span>
       </button>
-      <button id="btn-toggle-sidebar" class="btn-default" title="Sembunyikan/Tampilkan Panel Outline">
-        📑 Toggle Outline
+
+      <!-- Toggle Outline Sidebar -->
+      <button id="btn-toggle-sidebar" class="btn-prominent" title="Sembunyikan/Tampilkan Panel Outline">
+        📝 Edit Outline
       </button>
+
+      <!-- Unified Export Dropdown -->
+      <div class="dropdown-container">
+        <button id="btn-export-dropdown" class="btn-primary dropdown-trigger">
+          💾 Ekspor & File ▾
+        </button>
+        <div id="export-menu" class="dropdown-menu">
+          <button id="export-png" class="dropdown-item">📷 Gambar PNG (Hi-Res)</button>
+          <button id="export-svg" class="dropdown-item">📐 Vektor SVG</button>
+          <div class="dropdown-divider"></div>
+          <button id="export-json" class="dropdown-item">💾 Simpan Data JSON</button>
+          <button id="import-json-btn" class="dropdown-item">📂 Buka File JSON</button>
+        </div>
+      </div>
       <input type="file" id="import-json-input" accept=".json" style="display: none;">
-      <button id="import-json-btn" class="btn-default">📂 Import JSON</button>
-      <button id="export-json" class="btn-default">💾 Simpan JSON</button>
-      <button id="export-svg" class="btn-default">📐 Export SVG</button>
-      <button id="export-png" class="btn-primary">📷 Export PNG</button>
     </div>
   </header>
 
@@ -50,6 +75,7 @@
         <div class="sidebar-title">
           <span>📝</span> Text Outline Editor
         </div>
+        <button id="btn-close-sidebar" class="sidebar-close-btn" title="Tutup Outline">✕</button>
       </div>
       <div class="sidebar-help">
         Gunakan <strong>indentasi 2 spasi</strong> untuk membuat cabang bersarang.<br>
@@ -62,6 +88,11 @@
 
     <!-- Workspace: Canvas & Diagram -->
     <main class="workspace">
+      <!-- Mobile Floating Button to Open Outline -->
+      <button id="mobile-outline-fab" class="mobile-outline-fab" title="Buka Text Outline Editor">
+        📝 Buka Outline Editor
+      </button>
+
       <!-- Toolbar Zoom & Fit -->
       <div class="floating-toolbar">
         <button id="zoom-in" class="tool-btn" title="Perbesar (+)">➕</button>
@@ -94,17 +125,23 @@
       <!-- Panel Narasi Kausalitas -->
       <section class="causality-panel" id="causality-panel">
         <div class="panel-header">
-          <div class="panel-title">
-            <span>🔗</span> Analisis Hubungan Kausalitas
+          <div class="panel-header-left">
+            <div class="panel-title">
+              <span>🔗</span> Rantai Kausalitas (5 Whys)
+            </div>
+            <div id="causal-breadcrumbs" class="causal-breadcrumbs"></div>
           </div>
           <div class="causality-tabs">
             <button id="tab-forward" class="causality-tab active">
-              ➡️ Karena ... , maka ...
+              ➡️ Karena ➔ Maka
             </button>
             <button id="tab-reverse" class="causality-tab">
-              🔄 Kenapa ... ? , karena ... (5 Whys)
+              🔄 5 Whys (Kenapa?)
             </button>
-            <button id="btn-toggle-causality" class="tool-btn" style="padding: 2px 6px; margin-left: 8px;" title="Minimize/Maximize">
+            <button id="btn-copy-report" class="btn-default btn-xs" title="Salin Analisis Rantai ke Clipboard (Markdown)">
+              📋 Salin
+            </button>
+            <button id="btn-toggle-causality" class="tool-btn" style="padding: 2px 6px; margin-left: 4px;" title="Minimize/Maximize">
               ↕️
             </button>
           </div>
@@ -117,6 +154,9 @@
       </section>
     </main>
   </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
 
   <!-- Modal Dialog Input / Edit -->
   <div class="modal-overlay" id="modal-overlay">
