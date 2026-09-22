@@ -6,8 +6,8 @@ import { layoutFishbone } from './fishbone-layout.js';
 import { findPathToRoot, generateCausalityText } from './causality.js';
 import { sampleData, treeToOutline, outlineToTree, diagramThemes, diagramPresets, generateMarkdownReport } from './model.js';
 
-// Application State
-let currentTree = JSON.parse(JSON.stringify(sampleData));
+// Application State (Default: 6M Manufaktur)
+let currentTree = JSON.parse(JSON.stringify(diagramPresets.six_m.data));
 let selectedNodeId = null;
 let currentCausalityTab = 'forward'; // 'forward' | 'reverse'
 let zoomScale = 1;
@@ -739,6 +739,7 @@ function showToast(message) {
 function setupPresets() {
   const presetSelect = document.getElementById('diagram-preset-select');
   if (!presetSelect) return;
+  presetSelect.value = 'six_m';
 
   presetSelect.addEventListener('change', (e) => {
     const key = e.target.value;
