@@ -283,6 +283,53 @@ function setupZoomPan() {
     isPanning = false;
   });
 
+  // Touch Support (Pan dengan 1 jari & Pinch-to-zoom dengan 2 jari)
+  let initialPinchDist = null;
+  let initialScale = zoomScale;
+
+  container.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.fishbone-node')) return;
+    if (e.touches.length === 1) {
+      isPanning = true;
+      startPan = { x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY };
+    } else if (e.touches.length === 2) {
+      isPanning = false;
+      initialPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialScale = zoomScale;
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (isPanning && e.touches.length === 1) {
+      panX = e.touches[0].clientX - startPan.x;
+      panY = e.touches[0].clientY - startPan.y;
+      updateTransform();
+    } else if (e.touches.length === 2 && initialPinchDist) {
+      e.preventDefault();
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const ratio = currentDist / initialPinchDist;
+      zoomScale = Math.min(Math.max(0.15, initialScale * ratio), 3.0);
+      updateTransform();
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchend', (e) => {
+    if (e.touches.length === 0) {
+      isPanning = false;
+      initialPinchDist = null;
+    } else if (e.touches.length === 1) {
+      initialPinchDist = null;
+      isPanning = true;
+      startPan = { x: e.touches[0].clientX - panX, y: e.touches[0].clientY - panY };
+    }
+  });
+
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
@@ -591,9 +638,31 @@ function setupTabs() {
     updateCausalityUI(activePath);
   });
 
+  const sidebarEl = document.getElementById('sidebar');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+
+  // Di mobile (layar <= 768px), sidebar awal dalam keadaan tertutup
+  if (window.innerWidth <= 768) {
+    sidebarEl.classList.add('collapsed');
+  }
+
   document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('collapsed');
+    const isCollapsed = sidebarEl.classList.toggle('collapsed');
+    if (sidebarBackdrop) {
+      if (!isCollapsed && window.innerWidth <= 768) {
+        sidebarBackdrop.classList.add('show');
+      } else {
+        sidebarBackdrop.classList.remove('show');
+      }
+    }
   });
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', () => {
+      sidebarEl.classList.add('collapsed');
+      sidebarBackdrop.classList.remove('show');
+    });
+  }
 
   document.getElementById('btn-toggle-causality').addEventListener('click', () => {
     document.getElementById('causality-panel').classList.toggle('minimized');
